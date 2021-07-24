@@ -17,6 +17,10 @@ app.use("/user", user);
 var course = require("./routes/course");
 app.use("/course", course);
 
+//image routing
+// var image = require("./routes/image");
+// app.use("/image", image);
+
 app.listen(80, () => {
   console.log("Listening on port 80...");
 });
