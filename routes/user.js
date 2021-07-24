@@ -41,4 +41,29 @@ router.post("/login", (req, res) => {
   });
 });
 
+//signup
+router.post("/signup", (req, res) => {
+  // collection명
+  const collection = myDb.collection("users");
+
+  const newUser = {
+    name: req.body.name,
+    email: req.body.email,
+    password: req.body.password,
+  };
+
+  const query = { email: newUser.email };
+
+  collection.findOne(query, (err, result) => {
+    if (result == null) {
+      // console.log(result);
+      collection.insertOne(newUser, (err, result) => {
+        res.status(200).send();
+      });
+    } else {
+      res.status(404).send();
+    }
+  });
+});
+
 module.exports = router;
