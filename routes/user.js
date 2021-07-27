@@ -10,7 +10,7 @@ var myDb;
 Client.connect(databaseUrl, function (err, database) {
   if (err) throw err;
 
-  console.log("데이터베이스에 연결됨: " + databaseUrl);
+  // console.log("데이터베이스에 연결됨: " + databaseUrl);
   // database명
   myDb = database.db("travel");
 });

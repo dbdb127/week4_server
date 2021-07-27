@@ -2,6 +2,7 @@ var express = require("express");
 var router = express.Router();
 var multer = require("multer");
 var crypto = require("crypto");
+var fs = require("fs");
 
 var Client = require("mongodb").MongoClient;
 var databaseUrl = "mongodb://localhost:27017";
@@ -11,7 +12,7 @@ var myDb;
 Client.connect(databaseUrl, function (err, database) {
   if (err) throw err;
 
-  console.log("데이터베이스에 연결됨: " + databaseUrl);
+  // console.log("데이터베이스에 연결됨: " + databaseUrl);
   // database명
   myDb = database.db("travel");
 });
@@ -33,83 +34,73 @@ const _storage = multer.diskStorage({
 });
 
 const upload = multer({ storage: _storage });
+// const upload = multer({ dest: "uploads/" });
 
 // 업로드
-router.post("/upload", upload.array("images", 10), function (req, res) {
-  const url = location.search;
-  console.log("url", url);
-
-  // const query = {
-  //   email: req.params.email,
-  //   region: req.params.region,
-  //   name: req.params.name,
-  // };
-
+router.post("/upload", upload.array("image"), function (req, res) {
   const files = req.files;
-  console.log(files);
+  // console.log(files);
   const collection = myDb.collection("wishSpot");
 
-  // db에 저장
+  files.forEach((el) => {
+    const arr = el.filename.split("_");
+
+    const query = {
+      email: arr[0],
+      title: arr[1],
+      region: arr[2],
+      address: arr[3],
+    };
+
+    collection.updateOne(query, { $push: { image: el.filename } });
+  });
 
   return res.status(200).end();
 });
 
-// router.get("/uploads/:img", function (req, res) {
-//   var file = req.params.upload;
-//   console.log(file);
-//   var img = fs.readFileSync(__dirname + "/uploads/" + file);
-
-//   res.writeHead(200, { "Content-Type": "image/png" });
-//   res.end(img, "binary");
-// });
-
-/* 다운로드 요청 처리 */
-var register_number_for_img;
-var img_cnt;
-
-router.post("/getimgmain", function (req, res) {
-  console.log("이미지요청");
-  console.log(req.body);
-  //var register_number = req.body.register_number;
-  var register_number = req.body.register_number;
-  var i = req.body.img_cnt;
-  var filename = register_number + "_" + i + ".png";
-  var filePath = __dirname + "/uploads/" + filename;
+router.post("/getImage", function (req, res) {
+  var filename = req.body.name;
+  // console.log(filename);
+  var filePath = "./uploads/" + filename;
 
   fs.readFile(filePath, function (err, data) {
     if (err) {
-      console.log(err);
-      filename = "defaltImg.png";
-      filePath = __dirname + "/uploads/" + filename;
-      fs.readFile(filePath, function (err, data) {
-        console.log(filePath);
-        console.log(data);
-        res.end(data);
-      });
+      // console.log(err);
+      res.end(null);
     } else {
-      console.log(filePath);
-      console.log(data);
+      // console.log(filePath);
+      // console.log(data);
       res.end(data);
     }
   });
 });
 
-router.post("/getimg", function (req, res) {
-  console.log("이미지요청");
-  console.log(req.body);
-  var register_number = req.body.register_number;
-  var i = req.body.img_cnt;
-  var filename = register_number + "_" + i + ".png";
-  var filePath = __dirname + "/uploads/" + filename;
+router.post("/deleteImage", async function (req, res) {
+  var filename = req.body.name;
+  // console.log(filename);
+  var filePath = "./uploads/" + filename;
 
-  fs.readFile(filePath, function (err, data) {
-    if (err) {
-      console.log(err);
-      res.end(null);
+  fs.unlink(filePath, (err) =>
+    err ? console.log(err) : console.log("deleted")
+  );
+
+  const query = {
+    email: req.body.email,
+    region: req.body.region,
+    title: req.body.title,
+    address: req.body.address,
+  };
+
+  const collection = myDb.collection("wishSpot");
+
+  await collection.updateOne(query, { $pull: { image: filename } });
+
+  collection.findOne(query, (err, result) => {
+    if (result != null) {
+      // console.log(JSON.stringify(result));
+      res.status(200).send(JSON.stringify(result));
     } else {
-      console.log(filePath);
-      console.log(data);
-      res.end(data);
+      res.status(404).send();
     }
   });
 });

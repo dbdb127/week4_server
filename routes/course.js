@@ -9,7 +9,7 @@ var myDb;
 Client.connect(databaseUrl, function (err, database) {
   if (err) throw err;
 
-  console.log("데이터베이스에 연결됨: " + databaseUrl);
+  // console.log("데이터베이스에 연결됨: " + databaseUrl);
   // database명
   myDb = database.db("travel");
 });
@@ -21,7 +21,7 @@ router.post("/saveCourse", async (req, res) => {
 
   const locations = req.body.locations;
 
-  console.log(req.body);
+  // console.log(req.body);
 
   const newCourse = {
     email: req.body.email,
@@ -31,11 +31,11 @@ router.post("/saveCourse", async (req, res) => {
     locations: req.body.locations,
   };
 
-  console.log(newCourse.totalSize);
+  // console.log(newCourse.totalSize);
 
   await collection.insertOne(newCourse, (err, result) => {
     if (err) {
-      console.log("course already exists");
+      // console.log("course already exists");
     }
   });
 
@@ -49,11 +49,13 @@ router.post("/saveCourse", async (req, res) => {
       address: el.address,
       latitude: el.latitude,
       longtitude: el.longtitude,
+      image: [],
+      memo: "",
     };
 
     spotCol.insertOne(newSpot, (err, result) => {
       if (err) {
-        console.log("spot already exists");
+        // console.log("spot already exists");
       }
     });
   });
@@ -96,9 +98,7 @@ router.post("/singleSpot", async (req, res) => {
 
   collection.findOne(query, (err, result) => {
     if (result != null) {
-      // 아직 미완성 // 메모, 사진 업로드 하고 다시 수정해야함!!!
-      const objToSend = {};
-      res.status(200).send(JSON.stringify(objToSend));
+      res.status(200).send(JSON.stringify(result));
     } else {
       res.status(404).send();
     }
