@@ -21,6 +21,10 @@ app.use("/course", course);
 var image = require("./routes/image");
 app.use("/image", image);
 
+//search routing
+var search = require("./routes/search");
+app.use("/search", search);
+
 app.listen(80, () => {
   console.log("Listening on port 80...");
 });

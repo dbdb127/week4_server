@@ -55,6 +55,10 @@ router.post("/signup", (req, res) => {
     email: req.body.email,
     hash: creeped.hash,
     salt: creeped.salt,
+    image: "",
+    calendar: [],
+    login: false,
+    friends: [],
   };
 
   const query = { email: newUser.email };
@@ -72,7 +76,7 @@ router.post("/signup", (req, res) => {
 });
 
 // login
-router.post("/login", (req, res) => {
+router.post("/login", async (req, res) => {
   // collection명
   const collection = myDb.collection("users");
   // console.log("/login");
@@ -91,16 +95,107 @@ router.post("/login", (req, res) => {
       var validated = validate(pw, result.hash, result.salt);
 
       if (validated) {
+        collection.updateOne(query, { $set: { login: true } });
+
         const objToSend = {
           name: result.name,
           email: result.email,
+          image: result.image,
+          calendar: result.calendar,
+          login: true,
         };
+
         // login success
         res.status(200).send(JSON.stringify(objToSend));
       } else {
         // pw error
-        res.status(400).send();
+        res.status(404).send();
       }
+    } else {
+      // no account
+      res.status(404).send();
+    }
+  });
+});
+
+// logout
+router.post("/logout", (req, res) => {
+  // collection명
+  console.log(req.body.email);
+  const collection = myDb.collection("users");
+  const query = { email: req.body.email };
+  collection.updateOne(query, { $set: { login: false } });
+  res.status(200).send();
+});
+
+// check wheter user is log in or not
+router.post("/isLogin", (req, res) => {
+  // collection명
+  const collection = myDb.collection("users");
+
+  const query = { email: req.body.email };
+
+  collection.findOne(query, (err, result) => {
+    if (result != null) {
+      res.status(200).send(result.login);
+    } else {
+      // no account
+      res.status(404).send();
+    }
+  });
+});
+
+// send userInfo
+router.post("/userInfo", (req, res) => {
+  // collection명
+  const collection = myDb.collection("users");
+
+  const query = { email: req.body.email };
+
+  collection.findOne(query, (err, result) => {
+    if (result != null) {
+      const objToSend = {
+        name: result.name,
+        email: result.email,
+        image: result.image,
+        calendar: result.calendar,
+        login: result.login,
+        friends: result.friends,
+      };
+      res.status(200).send(JSON.stringify(objToSend));
+    } else {
+      // no account
+      res.status(404).send();
+    }
+  });
+});
+
+// set user date
+router.post("/sendDays", (req, res) => {
+  // collection명
+  const collection = myDb.collection("users");
+
+  const query = { email: req.body.email };
+
+  collection.updateOne(query, { $set: { calendar: req.body.days } });
+
+  res.status(200).send();
+});
+
+// set user date
+router.post("/getFriendDays", (req, res) => {
+  // collection명
+  const collection = myDb.collection("users");
+
+  const query = { email: req.body.email };
+
+  collection.findOne(query, (err, result) => {
+    if (result != null) {
+      const objToSend = {
+        email: result.email,
+        days: result.calendar,
+      };
+      res.status(200).send(JSON.stringify(objToSend));
     } else {
       // no account
       res.status(404).send();
